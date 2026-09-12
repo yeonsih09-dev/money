@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
@@ -409,6 +410,50 @@ let budgetViewMonth = currentMonth();
 let ledgerViewDate = today();
 let balanceWasOpened = false;
 
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event => {
+
+  event.preventDefault();
+
+  deferredInstallPrompt = event;
+
+  const btn =
+    document.getElementById("installAppBtn");
+
+  if(btn){
+    btn.classList.remove("hidden");
+  }
+
+});
+
+async function installApp(){
+
+  if(!deferredInstallPrompt){
+
+    toast("현재 브라우저에서는 앱 설치 메뉴를 이용해주세요.");
+
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+
+  const result =
+    await deferredInstallPrompt.userChoice;
+
+  if(result.outcome === "accepted"){
+    toast("앱 설치를 시작했어요.");
+  }
+
+  deferredInstallPrompt = null;
+
+  const btn =
+    document.getElementById("installAppBtn");
+
+  if(btn){
+    btn.classList.add("hidden");
+  }
+}
 function defaultState(){
   return {
     balances:{
@@ -429,6 +474,7 @@ function defaultState(){
     activeMonth:currentMonth()
   };
 }
+
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE);
@@ -1723,6 +1769,19 @@ window.addEventListener("load",()=>{
   toggleRecordType();
   firstLaunchCheck();
 });
+if("serviceWorker" in navigator){
+
+  window.addEventListener("load", () => {
+
+    navigator.serviceWorker
+      .register("./sw.js")
+      .catch(error => {
+        console.log("Service Worker 등록 실패:", error);
+      });
+
+  });
+
+}
 </script>
 </body>
 </html>
