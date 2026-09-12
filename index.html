@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>가계부 · 예산관리</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#000;color:#fff;font-family:"IBM Plex Sans KR",sans-serif}
+  body{min-height:100vh}
+  button,input,select,textarea{font:inherit}
+  button{border:0;cursor:pointer}
+  .app{width:100%;max-width:520px;min-height:100vh;margin:0 auto;background:#000}
+  .screen{display:none;min-height:100vh;padding:18px 16px 90px}
+  .screen.active{display:block}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;position:relative;}
+  .top h1{font-size:25px;margin:0;font-weight:700;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;}
+  .top .right{display:flex;gap:8px}
+  .icon-btn,.back-btn{background:#171717;color:#fff;border:1px solid #333;border-radius:12px;padding:10px 13px}
+  .back-btn{font-size:15px}
+  .home-title{font-size:30px;font-weight:700;margin:30px 0 28px}
+  .home-sub{color:#aaa;font-size:14px;margin-top:-18px;margin-bottom:25px}
+  .main-menu{display:flex;flex-direction:column;gap:14px}
+  .main-card{width:100%;padding:25px 20px;text-align:left;background:#111;border:1px solid #303030;border-radius:18px;color:#fff}
+  .main-card .emoji{font-size:28px;display:block;margin-bottom:12px}
+  .main-card strong{font-size:21px}
+  .main-card span{display:block;color:#999;margin-top:7px;font-size:13px}
+  .section-card{background:#101010;border:1px solid #292929;border-radius:16px;padding:16px;margin-bottom:13px}
+  .section-card h2{font-size:18px;margin:0 0 14px}
+  .big-total{font-size:24px;font-weight:700;margin:8px 0}
+  .budget-row{display:flex;align-items:center;justify-content:space-between;padding:13px 2px;border-bottom:1px solid #242424}
+  .budget-row:last-child{border-bottom:0}
+  .budget-row .name{font-size:16px}
+  .budget-row .nums{text-align:right}
+  .budget-row .planned{display:block;font-size:14px;color:#fff}
+  .budget-row .spent{display:block;color:#4d9cff;font-size:14px;margin-top:4px}
+  .budget-row .remain{display:block;color:#999;font-size:12px;margin-top:2px}
+  .blue{color:#4d9cff}
+  .muted{color:#888}
+  .input,.select,.textarea{width:100%;background:#0b0b0b;color:#fff;border:1px solid #3a3a3a;border-radius:11px;padding:12px}
+  .textarea{min-height:85px;resize:vertical}
+  label{display:block;color:#aaa;font-size:13px;margin:13px 0 6px}
+  .btn{width:100%;background:#fff;color:#000;border-radius:12px;padding:13px;font-weight:700;margin-top:14px}
+  .btn.dark{background:#181818;color:#fff;border:1px solid #3a3a3a}
+  .btn.blue-btn{background:#4d9cff;color:#000}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .date-picker{display:flex;align-items:center;gap:8px}
+  .date-picker .input{flex:1}
+  .date-title{
+    font-size:23px !important;
+    font-weight:700;
+    transform:translateY(15px);
+    margin-bottom:22px;}
+  .ledger-date-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .date-title{margin-bottom:0;position:relative;top:0;flex:1}
+  .day-total{font-size:17px;font-weight:700;margin-bottom:7px}
+  .ledger-summary{margin-bottom:10px}
+  .touch-record{
+    flex:0 0 28%;
+    background:#111;
+    border:1px solid #444;
+    border-radius:12px;
+    padding:8px 6px;
+    text-align:center;
+    color:#aaa;
+    min-height:38px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    transform:translateY(30px);}
+  .touch-record strong{display:block;color:#fff;font-size:13px;margin-bottom:0px}
+  .record{background:#101010;border:1px solid #292929;border-radius:14px;padding:14px;margin-bottom:10px}
+  .record-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .record-cat{font-size:13px;color:#4d9cff}
+  .record-item{font-weight:700;font-size:16px;margin-top:5px}
+  .record-place{color:#aaa;font-size:13px;margin-top:3px}
+  .record-money{font-weight:700;white-space:nowrap}
+  .record-why{color:#ddd;font-size:13px;line-height:1.5;margin-top:10px;padding-top:9px;border-top:1px solid #242424}
+  .currency{color:#999;font-size:12px}
+  .record-actions{display:flex;gap:7px;margin-top:10px}
+  .small-btn{background:#1b1b1b;color:#fff;border:1px solid #333;border-radius:9px;padding:7px 10px;font-size:12px}
+  .settings-item{padding:15px 0;border-bottom:1px solid #292929}
+  .settings-item:last-child{border-bottom:0}
+  .settings-title{font-weight:700;margin-bottom:6px}
+  .balance-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0}
+  .balance-line span:last-child{font-weight:700}
+  .note{font-size:12px;color:#777;line-height:1.5;margin-top:9px}
+  .month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}
+  .month-nav button{background:#171717;color:#fff;border:1px solid #333;border-radius:9px;padding:8px 12px}
+  .month-label{font-size:18px;font-weight:700}
+  .history-badge{font-size:11px;color:#888;border:1px solid #333;padding:4px 7px;border-radius:7px}
+  .settlement{margin-top:18px;padding-top:15px;border-top:1px solid #333}
+  .settlement div{display:flex;justify-content:space-between;padding:7px 0}
+  .actual-saving-box{margin-top:14px;padding:14px;border:1px solid #292929;border-radius:12px;background:#0b0b0b;display:flex;align-items:center;justify-content:space-between}
+  .actual-saving-box span{color:#aaa;font-size:13px}
+  .actual-saving-box strong{font-size:18px}
+  .empty{text-align:center;color:#777;padding:25px 10px}
+  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10;padding:20px;align-items:flex-end}
+  .modal-backdrop.show{display:flex}
+  .modal{width:100%;max-width:520px;margin:0 auto;background:#111;border:1px solid #333;border-radius:20px 20px 12px 12px;padding:18px;max-height:90vh;overflow:auto}
+  .modal-head{display:flex;justify-content:space-between;align-items:center}
+  .modal-head h2{margin:0;font-size:20px}
+  .close{background:#222;color:#fff;border-radius:9px;padding:8px 11px}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#fff;color:#000;padding:11px 16px;border-radius:10px;font-size:13px;display:none;z-index:30;white-space:nowrap}
+  .toast.show{display:block}
+  .danger{color:#ff6969}
+  .allowance-slot{padding:12px 0;border-bottom:1px solid #292929}
+  .allowance-slot:last-child{border-bottom:0}
+  .allowance-saved{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .allowance-saved .amount{font-weight:700}
+  .income{color:#6ee7a8}
+  .income-record{border-color:#244b38}
+  .hidden{display:none!important}
+  @media(min-width:700px){body{background:#111}.app{border-left:1px solid #222;border-right:1px solid #222}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 홈 -->
+  <section id="home" class="screen active">
+    <div class="home-title">가계부</div>
+    <div class="home-sub">예산을 계획하고, 사용한 돈을 기록해요.</div>
+    <div class="main-menu">
+      <button class="main-card" onclick="openBudget()">
+        <span class="emoji">📊</span>
+        <strong>예산 관리</strong>
+        <span>이번 달 예산과 저축을 확인해요.</span>
+      </button>
+      <button class="main-card" onclick="openLedger()">
+        <span class="emoji">🧾</span>
+        <strong>가계부 기록</strong>
+        <span>날짜별로 사용한 돈을 기록해요.</span>
+      </button>
+    </div>
+    <button class="btn dark" onclick="showSettings()">⚙ 설정</button>
+  </section>
+
+  <!-- 예산 -->
+  <section id="budget" class="screen">
+    <div class="top">
+      <button class="back-btn" onclick="goHome()">← 뒤로</button>
+      <h1>예산 관리</h1>
+      <button class="icon-btn" onclick="openBudgetSettings()">⚙</button>
+    </div>
+
+    <div class="month-nav">
+      <button onclick="changeBudgetMonth(-1)">‹</button>
+      <div class="month-label" id="budgetMonthLabel"></div>
+      <button onclick="changeBudgetMonth(1)">›</button>
+    </div>
+
+    <div id="budgetHistoryBadge" class="history-badge hidden">지난달 결산 · 수정 불가</div>
+
+    <div class="section-card">
+      <div class="big-total" id="budgetTotalText"></div>
+      <div id="budgetRows"></div>
+    </div>
+
+    <div class="section-card">
+      <h2>저축</h2>
+      <div>
+        <label>이번 달 저축 목표</label>
+        <input id="monthlySavingInput" class="input" type="number" min="0" step="100" placeholder="0">
+      </div>
+      <button id="saveCurrentBudgetBtn" class="btn" onclick="saveCurrentBudget()">저장</button>
+      <div id="actualSavingBox" class="actual-saving-box hidden">
+        <span>실제 저축액</span>
+        <strong id="actualSavingText">0₩</strong>
+      </div>
+    </div>
+
+    <div class="section-card settlement hidden" id="settlementBox">
+      <h2>결산</h2>
+      <div><span>수익 :</span><strong id="settlementIncome"></strong></div>
+      <div><span>지출 :</span><strong id="settlementExpense"></strong></div>
+      <div><span>저축 :</span><strong id="settlementSaving"></strong></div>
+    </div>
+  </section>
+
+  <!-- 가계부 -->
+  <section id="ledger" class="screen">
+    <div class="top">
+      <button class="back-btn" onclick="goHome()">← 뒤로</button>
+      <h1>가계부 기록</h1>
+      <button class="icon-btn" onclick="openLedgerSettings()">⚙</button>
+    </div>
+
+    <div class="date-picker">
+      <button class="icon-btn" onclick="changeLedgerDate(-1)">‹</button>
+      <input id="ledgerDate" class="input" type="date" onchange="renderLedger()">
+      <button class="icon-btn" onclick="changeLedgerDate(1)">›</button>
+    </div>
+
+    <div class="ledger-date-row">
+      <div class="date-title" id="dateTitle"></div>
+      <button class="touch-record" onclick="openRecordModal()">
+        <strong>기록하기</strong>
+      </button>
+    </div>
+
+    <div class="ledger-summary">
+      <div class="day-total" id="dayTotal"></div>
+      <div class="day-income income" id="dayIncome"></div>
+    </div>
+
+    <div id="records"></div>
+  </section>
+
+  <!-- 전체 설정 -->
+  <section id="settings" class="screen">
+    <div class="top">
+      <button class="back-btn" onclick="goHome()">← 뒤로</button>
+      <h1>설정</h1>
+      <span></span>
+    </div>
+
+    <div class="section-card">
+      <h2>용돈</h2>
+      <div id="allowanceSlots"></div>
+      <div class="note">최대 4개까지 저장할 수 있어요. 받는 날(일)과 받은 금액만 입력하면 돼요.</div>
+    </div>
+
+
+    <div class="section-card">
+      <h2>저축 계산</h2>
+      <label>얼마를 저축할지</label>
+      <input id="savingAmount" class="input" type="number" min="0" step="100" placeholder="예: 30000">
+      <label>주기</label>
+      <select id="savingCycle" class="select">
+        <option value="monthly">한 달에 한 번</option>
+        <option value="biweekly">2주에 한 번</option>
+        <option value="weekly">1주에 한 번</option>
+      </select>
+      <button class="btn blue-btn" onclick="calculateSaving()">1년 저축액 계산</button>
+      <div class="big-total" id="savingResult">1년 동안 0₩</div>
+      <div class="note">계산은 1년을 월 12회 / 2주 26회 / 1주 52회 기준으로 해요.</div>
+    </div>
+
+    <div class="section-card">
+      <h2>카드/화폐 설정</h2>
+
+      <div id="currencySettings"></div>
+
+      <button class="btn" onclick="addCurrencySetting()">
+        + 카드/화폐 추가
+      </button>
+    </div>
+
+    <div class="section-card">
+      <h2>잔액</h2>
+      <div id="settingsBalances"></div>
+      <button class="btn" onclick="openBalanceModal()">잔액 수정</button>
+    </div>
+  </section>
+
+  <!-- 예산 설정 -->
+  <section id="budgetSettings" class="screen">
+    <div class="top">
+      <button class="back-btn" onclick="openBudget()">← 뒤로</button>
+      <h1>예산 설정</h1>
+      <span></span>
+    </div>
+    <div class="section-card">
+      <h2 id="budgetSettingTitle"></h2>
+      <label>총 예산</label>
+      <input id="budgetTotalInput" class="input" type="number" min="0" step="100" placeholder="0">
+      <div id="categoryBudgetInputs"></div>
+      <button class="btn" onclick="saveBudgetSettings()">저장</button>
+      <div class="note">현재 달만 수정할 수 있어요. 달이 지나면 해당 달의 예산 기록은 자동으로 보관되고 수정할 수 없어요.</div>
+    </div>
+  </section>
+
+  <!-- 가계부 설정 -->
+  <section id="ledgerSettings" class="screen">
+    <div class="top">
+      <button class="back-btn" onclick="openLedger()">← 뒤로</button>
+      <h1>잔액 설정</h1>
+      <span></span>
+    </div>
+    <div class="section-card">
+      <h2>현재 잔액</h2>
+      <div id="ledgerSettingsBalances"></div>
+      <button class="btn" onclick="openBalanceModal()">잔액 수정</button>
+      <div class="note">가계부에서 지출을 저장하면 선택한 화폐의 잔액에서 즉시 차감돼요. 잔액을 직접 바꾸려면 반드시 '잔액 수정'을 눌러 저장하세요.</div>
+    </div>
+  </section>
+</div>
+
+<!-- 기록 모달 -->
+<div id="recordModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="recordModalTitle">지출 기록</h2>
+      <button class="close" onclick="closeModal('recordModal')">닫기</button>
+    </div>
+    <input type="hidden" id="editingRecordId">
+    <label>기록 종류</label>
+    <select id="recordType" class="select" onchange="toggleRecordType()">
+      <option value="expense">지출</option>
+      <option value="income">수익</option>
+    </select>
+    <div id="recordCategoryWrap">
+      <label id="recordCategoryLabel">카테고리</label>
+      <select id="recordCategory" class="select"></select>
+    </div>
+    <label id="recordAmountLabel">쓴 금액</label>
+    <input id="recordAmount" class="input" type="number" min="0" step="100" placeholder="0">
+    <label id="recordWhyLabel">왜 썼는지</label>
+    <textarea id="recordWhy" class="textarea" placeholder="예: 점심을 먹어서"></textarea>
+    <label id="recordItemLabel">어떤 것에 썼는지</label>
+    <input id="recordItem" class="input" placeholder="예: 김치찌개">
+    <label>어디서 썼는지</label>
+    <input id="recordPlace" class="input" placeholder="예: 학교 앞 식당">
+    <label>어떤 화폐로 썼는지</label>
+    <select id="recordCurrency" class="select"></select>
+    <button class="btn blue-btn" onclick="saveRecord()">저장</button>
+  </div>
+</div>
+
+<!-- 잔액 최초 입력/수정 모달 -->
+<div id="balanceModal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="balanceModalTitle">잔액 기록</h2>
+      <button class="close" onclick="closeModal('balanceModal')">닫기</button>
+    </div>
+    <div id="balanceInputs"></div>
+    <button class="btn" onclick="saveBalances()">저장</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const CATEGORIES = ["식비","교통비","물품구매","여가","데이트","정기결제","기타"];
+const INCOME_CATEGORIES = ["용돈","장학금","선물","기타"];
+const DEFAULT_CURRENCIES = [
+  "카드입력",
+  "카드입력",
+  "카드입력",
+  "현금"
+];
+
+function getCurrencies(){
+  if(Array.isArray(state.currencies) && state.currencies.length){
+    return state.currencies;
+  }
+
+  // 이전에 저장된 데이터가 있다면 불러오기
+  if(Array.isArray(state.getCurrencies) && state.getCurrencies.length){
+    state.currencies = [...state.getCurrencies];
+    return state.currencies;
+  }
+
+  state.currencies = [...DEFAULT_CURRENCIES];
+  return state.currencies;
+}
+const STORAGE = "my_budget_app_v1";
+
+let state = loadState();
+let budgetViewMonth = currentMonth();
+let ledgerViewDate = today();
+let balanceWasOpened = false;
+
+function defaultState(){
+  return {
+    balances:{
+    "카드입력":0,
+    "카드입력":0,
+    "카드입력":0,
+    "현금":0,
+    },
+    currencies: [...DEFAULT_CURRENCIES],
+    initialized:false,
+    allowances:[],
+    incomes:[],
+    extraAllowances:[],
+    budgets:{},
+    expenses:[],
+    monthlySettlements:{},
+    activeMonth:currentMonth()
+  };
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE);
+    const s=raw?JSON.parse(raw):defaultState();
+    return Object.assign(defaultState(),s);
+  }catch(e){return defaultState()}
+}
+function saveState(){localStorage.setItem(STORAGE,JSON.stringify(state))}
+function migrateState(){
+  if(!Array.isArray(state.allowances)) state.allowances=[];
+  if(!Array.isArray(state.incomes)) state.incomes=[];
+  // 이전 버전의 날짜(YYYY-MM-DD) 저장값이 있다면 일(day)만 남겨요.
+  state.allowances=state.allowances.slice(0,4).map(x=>({
+    id:x.id||Date.now().toString()+Math.random(),
+    day:Array.isArray(x.days)
+      ? x.days
+      : [Number(x.day||String(x.date||"").slice(-2)||1)],
+    amount:Number(x.amount||0),
+    memo:x.memo||"용돈",
+    effectiveFrom:x.effectiveFrom||"1900-01-01",
+    endDate:x.endDate||null
+  })).filter(x=>
+    x.days.length>0 &&
+    x.days.every(d=>d>=1&&d<=31) &&
+    x.amount>0);
+  (state.expenses||[]).forEach(x=>{if(!x.type)x.type="expense";});
+  saveState();
+}
+migrateState();
+function pad(n){return String(n).padStart(2,"0")}
+function today(){const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function currentMonth(){return today().slice(0,7)}
+function monthLabel(m){const [y,mo]=m.split("-");return y+"년 "+Number(mo)+"월"}
+function money(n){return Number(n||0).toLocaleString("ko-KR")+"₩"}
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function monthExpenses(m){return state.expenses.filter(x=>x.date.startsWith(m) && x.type!=="income")}
+function monthIncome(m){
+
+  const [y,mo] = m.split("-").map(Number);
+
+  const daysInMonth =
+    new Date(y,mo,0).getDate();
+
+  let allowance = 0;
+
+  for(let day=1; day<=daysInMonth; day++){
+
+    const dateString =
+      y + "-" +
+      String(mo).padStart(2,"0") + "-" +
+      String(day).padStart(2,"0");
+
+    (state.allowances || []).forEach(a => {
+
+      if(allowanceAppliesOnDate(a,dateString)){
+
+        const days =
+          Array.isArray(a.days)
+            ? a.days
+            : [Number(a.day)];
+
+        if(days.includes(day)){
+          allowance += Number(a.amount || 0);
+        }
+      }
+
+    });
+  }
+
+  const income =
+    (state.incomes || [])
+      .filter(x => x.date.startsWith(m))
+      .reduce(
+        (total,x) => total + Number(x.amount || 0),
+        0
+      );
+
+  return allowance + income;
+}
+
+
+function dayIncome(d){
+
+  let allowance = 0;
+
+  (state.allowances || []).forEach(a => {
+
+    if(
+      allowanceAppliesOnDate(a,d)
+    ){
+
+      const day =
+        Number(d.slice(-2));
+
+      const days =
+        getAllowanceDays(a);
+
+      if(days.includes(day)){
+        allowance +=
+          Number(a.amount || 0);
+      }
+    }
+
+  });
+
+  const income =
+    (state.incomes || [])
+      .filter(x => x.date === d)
+      .reduce(
+        (total,x) =>
+          total + Number(x.amount || 0),
+        0
+      );
+
+  return allowance + income;
+}
+
+function ensureMonth(){
+  const now=currentMonth();
+  if(!state.activeMonth) state.activeMonth=now;
+  if(state.activeMonth!==now){
+    const old=state.activeMonth;
+    const oldBudget=state.budgets[old]||blankBudget();
+    const exp=monthExpenses(old).reduce((a,x)=>a+Number(x.amount||0),0);
+    const income=monthIncome(old);
+    const saving=Math.max(0,income-exp);
+    state.monthlySettlements[old]={income,expense:exp,saving,budget:oldBudget};
+    state.activeMonth=now;
+    if(!state.budgets[now]) state.budgets[now]=blankBudget();
+    saveState();
+  }
+}
+function blankBudget(){
+  const b={total:0,saving:0,saved:0};
+  CATEGORIES.forEach(c=>b[c]=0);
+  return b;
+}
+function getBudget(m){
+  if(!state.budgets[m]) state.budgets[m]=blankBudget();
+  return state.budgets[m];
+}
+function goHome(){showScreen("home")}
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+function openBudget(){
+  ensureMonth(); budgetViewMonth=currentMonth(); renderBudget(); showScreen("budget");
+}
+function openLedger(){ledgerViewDate=today();renderLedger();showScreen("ledger")}
+function openSettings(){
+  showScreen("settings");
+  renderSettings();
+}
+function openBudgetSettings(){renderBudgetSettings();showScreen("budgetSettings")}
+function openLedgerSettings(){renderLedgerSettings();showScreen("ledgerSettings")}
+function showSettings(){
+  showScreen("settings");
+  renderSettings();
+}
+function renderBudget(){
+  ensureMonth();
+  const b=getBudget(budgetViewMonth);
+  document.getElementById("budgetMonthLabel").textContent=monthLabel(budgetViewMonth);
+  const isHistory=budgetViewMonth < currentMonth();
+  document.getElementById("budgetHistoryBadge").classList.toggle("hidden",!isHistory);
+  document.getElementById("budgetTotalText").textContent=monthLabel(budgetViewMonth)+" 총 예산 : "+money(b.total);
+  const ex=monthExpenses(budgetViewMonth);
+  const rows=document.getElementById("budgetRows");
+  rows.innerHTML=CATEGORIES.map(c=>{
+    const spent=ex.filter(x=>x.category===c).reduce((a,x)=>a+Number(x.amount||0),0);
+    const remain=Number(b[c]||0)-spent;
+    return `<div class="budget-row">
+      <div class="name">-${escapeHtml(c)} :</div>
+      <div class="nums"><span class="planned">${money(b[c])}</span>
+      <span class="spent">사용 ${money(spent)}</span>
+      <span class="remain">남은 예산 ${money(remain)}</span></div>
+    </div>`;
+  }).join("");
+  document.getElementById("monthlySavingInput").value=b.saving||0;
+  document.getElementById("saveCurrentBudgetBtn").classList.toggle("hidden",isHistory);
+  const settlement=state.monthlySettlements[budgetViewMonth] || (isHistory ? {
+    income:monthIncome(budgetViewMonth),
+    expense:monthExpenses(budgetViewMonth).reduce((a,x)=>a+Number(x.amount||0),0),
+    saving:Math.max(0,monthIncome(budgetViewMonth)-monthExpenses(budgetViewMonth).reduce((a,x)=>a+Number(x.amount||0),0))
+  } : null);
+  document.getElementById("settlementBox").classList.toggle("hidden",!settlement);
+  if(settlement){
+    document.getElementById("settlementIncome").textContent=money(settlement.income);
+    document.getElementById("settlementExpense").textContent=money(settlement.expense);
+    document.getElementById("settlementSaving").textContent=money(settlement.saving);
+  }
+  document.getElementById("monthlySavingInput").disabled=isHistory;
+  const actualSavingBox=document.getElementById("actualSavingBox");
+  actualSavingBox.classList.toggle("hidden",!isHistory);
+  if(isHistory){
+    const actualSaving=Math.max(0,monthIncome(budgetViewMonth)-monthExpenses(budgetViewMonth).reduce((a,x)=>a+Number(x.amount||0),0));
+    document.getElementById("actualSavingText").textContent=money(actualSaving);
+  }
+}
+function changeBudgetMonth(delta){
+  let d=new Date(budgetViewMonth+"-01T00:00:00");
+  d.setMonth(d.getMonth()+delta);
+  budgetViewMonth=d.getFullYear()+"-"+pad(d.getMonth()+1);
+  renderBudget();
+}
+function saveCurrentBudget(){
+  if(budgetViewMonth!==currentMonth()){
+    return toast("지난달 예산은 수정할 수 없어요.");
+  }
+  const b=getBudget(budgetViewMonth);
+  // 저축 목표만 직접 입력
+  b.saving=Number(
+    document.getElementById("monthlySavingInput").value || 0
+  );
+  saveState();
+  renderBudget();
+  toast("저축 목표가 저장됐어요.");
+}
+function renderBudgetSettings(){
+  const m=currentMonth(),b=getBudget(m);
+  document.getElementById("budgetSettingTitle").textContent=monthLabel(m)+" 예산";
+  document.getElementById("budgetTotalInput").value=b.total||0;
+  document.getElementById("categoryBudgetInputs").innerHTML=CATEGORIES.map(c=>
+    `<label>${c}</label><input id="budget_${c}" class="input" type="number" min="0" step="100" value="${b[c]||0}">`
+  ).join("");
+}
+function saveBudgetSettings(){
+  const m=currentMonth(),b=getBudget(m);
+  b.total=Number(document.getElementById("budgetTotalInput").value||0);
+  CATEGORIES.forEach(c=>b[c]=Number(document.getElementById("budget_"+c).value||0));
+  saveState();openBudget();toast("예산이 저장됐어요.");
+}
+
+function renderLedger(){
+
+  document.getElementById("ledgerDate").value = ledgerViewDate;
+
+  const d = new Date(ledgerViewDate + "T00:00:00");
+
+  document.getElementById("dateTitle").textContent =
+    `${d.getMonth()+1}월 ${d.getDate()}일`;
+
+  // 지출
+  const list =
+    state.expenses.filter(
+      x =>
+        x.date === ledgerViewDate &&
+        x.type !== "income"
+    );
+
+  const total =
+    list.reduce(
+      (a,x) => a + Number(x.amount || 0),
+      0
+    );
+
+  // 이날 수익
+  const income =
+    dayIncome(ledgerViewDate);
+
+  document.getElementById("dayTotal").textContent =
+    "이날 지출 : " + money(total);
+
+  document.getElementById("dayIncome").textContent =
+    income
+      ? "이날 수익 : " + money(income)
+      : "";
+
+  // 일반 수익 기록
+  const incomeList =
+    state.incomes.filter(
+      x => x.date === ledgerViewDate
+    );
+
+  // ★ 이날에 해당하는 정기용돈
+  const allowanceList =
+    (state.allowances || []).filter(
+      a => allowanceAppliesOnDate(
+        a,
+        ledgerViewDate
+      )
+    );
+
+  const html =
+    [
+      ...incomeList.map(incomeRecordHtml),
+      ...allowanceList.map(allowanceRecordHtml),
+      ...list.map(recordHtml)
+    ].join("");
+
+  document.getElementById("records").innerHTML =
+    html ||
+    `<div class="empty">아직 기록이 없어요.</div>`;
+}
+
+function incomeRecordHtml(r){
+  return `<div class="record income-record">
+    <div class="record-head">
+      <div><div class="record-cat income">${escapeHtml(r.category||"수익")}</div><div class="record-item">${escapeHtml(r.item||"수익")}</div><div class="record-place">${escapeHtml(r.place||"")}</div></div>
+      <div class="record-money income">+${money(r.amount)}<div class="currency">${escapeHtml(r.currency)}</div></div>
+    </div>
+    <div class="record-why">→ ${escapeHtml(r.why||"")}</div>
+    <div class="record-actions"><button class="small-btn" onclick="editIncome('${r.id}')">수정</button><button class="small-btn" onclick="deleteIncome('${r.id}')">삭제</button></div>
+  </div>`;
+}
+function allowanceRecordHtml(a){
+
+  return `
+    <div class="record income-record">
+
+      <div class="record-head">
+
+        <div>
+          <div class="record-cat income">
+            용돈
+          </div>
+
+          <div class="record-item">
+            정기용돈
+          </div>
+
+          <div class="record-place">
+            ${escapeHtml(a.memo || "용돈")}
+          </div>
+        </div>
+
+        <div class="record-money income">
+          +${money(a.amount)}
+
+          <div class="currency">
+            현금
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+function recordHtml(r){
+  return `<div class="record">
+    <div class="record-head">
+      <div><div class="record-cat">${escapeHtml(r.category)}</div><div class="record-item">${escapeHtml(r.item)}</div><div class="record-place">${escapeHtml(r.place)}</div></div>
+      <div class="record-money">${money(r.amount)}<div class="currency">${escapeHtml(r.currency)}</div></div>
+    </div>
+    <div class="record-why">→ ${escapeHtml(r.why)}</div>
+    <div class="record-actions"><button class="small-btn" onclick="editRecord('${r.id}')">수정</button><button class="small-btn" onclick="deleteRecord('${r.id}')">삭제</button></div>
+  </div>`;
+}
+function changeLedgerDate(delta){
+  const d=new Date(ledgerViewDate+"T00:00:00");d.setDate(d.getDate()+delta);
+  ledgerViewDate=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+  renderLedger();
+}
+function toggleRecordType(){
+  const income=document.getElementById("recordType").value==="income";
+  const category=income?INCOME_CATEGORIES:CATEGORIES;
+  document.getElementById("recordCategory").innerHTML=category.map(c=>`<option>${c}</option>`).join("");
+  document.getElementById("recordCategoryWrap").classList.remove("hidden");
+  document.getElementById("recordCategoryLabel").textContent=income?"수익 카테고리":"카테고리";
+  document.getElementById("recordAmountLabel").textContent=income?"받은 금액":"쓴 금액";
+  document.getElementById("recordWhyLabel").textContent=income?"왜 받았는지":"왜 썼는지";
+  document.getElementById("recordItemLabel").textContent=income?"어떤 수익인지":"어떤 것에 썼는지";
+  document.getElementById("recordModalTitle").textContent=income?"수익 기록":"지출 기록";
+}
+function openRecordModal(id=null){
+  document.getElementById("recordModal").classList.add("show");
+  document.getElementById("editingRecordId").value=id||"";
+  document.getElementById("recordCategory").innerHTML=CATEGORIES.map(c=>`<option>${c}</option>`).join("");
+  document.getElementById("recordCurrency").innerHTML=getCurrencies().map(c=>`<option>${c}</option>`).join("");
+  document.getElementById("recordType").value="expense";
+  if(id){
+    const r=state.expenses.find(x=>x.id===id);
+    document.getElementById("recordType").value="expense";
+    document.getElementById("recordCategory").value=r.category;
+    document.getElementById("recordAmount").value=r.amount;
+    document.getElementById("recordWhy").value=r.why;
+    document.getElementById("recordItem").value=r.item;
+    document.getElementById("recordPlace").value=r.place;
+    document.getElementById("recordCurrency").value=r.currency;
+  }else{
+    ["recordAmount","recordWhy","recordItem","recordPlace"].forEach(x=>document.getElementById(x).value="");
+  }
+  toggleRecordType();
+}
+
+function closeModal(id){document.getElementById(id).classList.remove("show")}
+function editRecord(id){openRecordModal(id)}
+function deleteRecord(id){
+  if(!confirm("이 기록을 삭제할까요?"))return;
+  const r=state.expenses.find(x=>x.id===id);
+  if(r)state.balances[r.currency]+=Number(r.amount||0);
+  state.expenses=state.expenses.filter(x=>x.id!==id);
+  saveState();renderLedger();toast("기록이 삭제됐어요.");
+}
+function saveRecord(){
+  const id=document.getElementById("editingRecordId").value;
+  const type=document.getElementById("recordType").value;
+  const data={
+    id:id||Date.now().toString(),
+    date:ledgerViewDate,
+    amount:Number(document.getElementById("recordAmount").value||0),
+    why:document.getElementById("recordWhy").value.trim(),
+    item:document.getElementById("recordItem").value.trim(),
+    place:document.getElementById("recordPlace").value.trim(),
+    currency:document.getElementById("recordCurrency").value,
+    category:document.getElementById("recordCategory").value
+  };
+  if(!data.amount){toast(type==="income"?"받은 금액을 입력해주세요.":"쓴 금액을 입력해주세요.");return}
+  if(type==="income"){
+    if(id){
+      const old=state.incomes.find(x=>x.id===id);
+      if(old && old.currency!==data.currency){state.balances[old.currency]-=Number(old.amount||0);state.balances[data.currency]+=data.amount}
+      else if(old){state.balances[data.currency]+=data.amount-Number(old.amount||0)}
+      state.incomes=state.incomes.map(x=>x.id===id?data:x);
+    }else{
+      state.incomes.push(data);
+      state.balances[data.currency]+=data.amount;
+    }
+  }else{
+    data.type="expense";
+    data.category=document.getElementById("recordCategory").value;
+    if(id){
+      const old=state.expenses.find(x=>x.id===id);
+      if(old && old.currency!==data.currency){state.balances[old.currency]+=Number(old.amount||0);state.balances[data.currency]-=data.amount}
+      else if(old){state.balances[data.currency]+=Number(old.amount||0)-data.amount}
+      state.expenses=state.expenses.map(x=>x.id===id?data:x);
+    }else{
+      state.expenses.push(data);
+      state.balances[data.currency]-=data.amount;
+    }
+  }
+  saveState();closeModal("recordModal");renderLedger();toast("저장됐어요.");
+}
+
+function renderSettings(){
+  renderAllowanceSlots();
+  renderCurrencySettings();
+  renderSettingsBalances();
+}
+
+function renderCurrencySettings(){
+
+  const box = document.getElementById("currencySettings");
+
+  if(!box) return;
+
+  const currencies = getCurrencies();
+
+  let html = "";
+
+  currencies.forEach((name,index)=>{
+
+    html += `
+      <div class="allowance-slot">
+
+        <div style="display:flex;gap:8px;align-items:center;">
+
+          <input
+            id="currency_${index}"
+            class="input"
+            type="text"
+            value="${escapeHtml(name)}"
+            style="flex:1;"
+          >
+
+          <button
+            class="small-btn"
+            onclick="saveCurrencySetting(${index})">
+            저장
+          </button>
+
+          <button
+            class="small-btn"
+            onclick="deleteCurrencySetting(${index})">
+            삭제
+          </button>
+
+        </div>
+
+      </div>
+    `;
+
+  });
+
+  box.innerHTML = html;
+}
+
+function saveCurrencySetting(index){
+
+  const input =
+    document.getElementById("currency_" + index);
+
+  if(!input) return;
+
+  const newName = input.value.trim();
+
+  if(!newName){
+    toast("카드/화폐 이름을 입력해주세요.");
+    return;
+  }
+
+  const currencies = getCurrencies();
+  const oldName = currencies[index];
+
+  if(!oldName){
+    return;
+  }
+
+  if(
+    currencies.some(
+      (x,i) => i !== index && x === newName
+    )
+  ){
+    toast("같은 이름의 카드/화폐가 있어요.");
+    return;
+  }
+
+  // 기존 잔액을 새 이름으로 옮김
+  const oldBalance =
+    Number(state.balances[oldName] || 0);
+
+  if(oldName !== newName){
+
+    state.balances[newName] = oldBalance;
+
+    delete state.balances[oldName];
+
+    // 기존 기록의 화폐 이름도 변경
+    (state.expenses || []).forEach(r => {
+      if(r.currency === oldName){
+        r.currency = newName;
+      }
+    });
+
+    (state.incomes || []).forEach(r => {
+      if(r.currency === oldName){
+        r.currency = newName;
+      }
+    });
+  }
+
+  currencies[index] = newName;
+  state.currencies = currencies;
+
+  saveState();
+
+  renderSettings();
+  renderLedgerSettings();
+
+  toast("카드/화폐 이름이 저장됐어요.");
+}
+
+function deleteCurrencySetting(index){
+
+  const currencies = getCurrencies();
+
+  if(currencies.length <= 1){
+    toast("최소 1개의 카드/화폐는 있어야 해요.");
+    return;
+  }
+
+  const name = currencies[index];
+
+  if(!name){
+    return;
+  }
+
+  if(!confirm(`"${name}"을(를) 삭제할까요?`)){
+    return;
+  }
+
+  delete state.balances[name];
+
+  state.currencies =
+    currencies.filter((_,i) => i !== index);
+
+  saveState();
+
+  renderSettings();
+  renderLedgerSettings();
+
+  toast("카드/화폐가 삭제됐어요.");
+}
+
+function addCurrencySetting(){
+
+  const box = document.getElementById("currencySettings");
+
+  if(!box) return;
+
+  const currencies = getCurrencies();
+
+  if(currencies.length >= 10){
+    toast("최대 10개까지 설정할 수 있어요.");
+    return;
+  }
+
+  const addBox = document.createElement("div");
+
+  addBox.className = "allowance-slot";
+
+  addBox.innerHTML = `
+    <label>새 카드/화폐</label>
+
+    <input
+      id="newCurrencyInput"
+      class="input"
+      type="text"
+      placeholder="예: 국민카드"
+    >
+
+    <button
+      class="btn"
+      onclick="saveNewCurrency()">
+      저장
+    </button>
+  `;
+
+  box.appendChild(addBox);
+
+  document.getElementById("newCurrencyInput").focus();
+}
+
+function saveNewCurrency(){
+
+  const input =
+    document.getElementById("newCurrencyInput");
+
+  if(!input) return;
+
+  const name = input.value.trim();
+
+  if(!name){
+    toast("카드/화폐 이름을 입력해주세요.");
+    return;
+  }
+
+  const currencies = getCurrencies();
+
+  if(currencies.includes(name)){
+    toast("이미 등록된 카드/화폐예요.");
+    return;
+  }
+
+  if(currencies.length >= 10){
+    toast("최대 10개까지 설정할 수 있어요.");
+    return;
+  }
+
+  state.currencies = [
+    ...currencies,
+    name
+  ];
+
+  state.balances[name] = 0;
+
+  saveState();
+
+  renderSettings();
+  renderLedgerSettings();
+
+  toast("카드/화폐가 추가됐어요.");
+}
+
+function renderAllowanceSlots(){
+  const slots = document.getElementById("allowanceSlots");
+  const list=(state.allowances||[])
+    .filter(a => !a.endDate || a.endDate >= today())
+    .slice(0,4);
+
+  let html = "";
+
+  // 저장된 용돈 표시
+  list.forEach((a, i) => {
+
+    const days = Array.isArray(a.days)
+      ? a.days
+      : [Number(a.day)];
+
+    html += `''
+      <div class="allowance-slot">
+
+        <div class="allowance-saved">
+
+          <span>
+            ${escapeHtml(days.join(", "))}일
+          </span>
+
+          <span class="amount">
+            ${money(a.amount)}
+          </span>
+
+          <div>
+            <button
+              class="small-btn"
+              onclick="editAllowance('${a.id}')">
+              수정
+            </button>
+
+            <button
+              class="small-btn"
+              onclick="deleteAllowance('${a.id}')">
+              삭제
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  });
+
+  // 저장된 용돈이 4개 미만이면 추가 버튼 표시
+  if(list.length < 4){
+    html += `
+      <button
+        class="btn dark"
+        onclick="showAllowanceInput()">
+        + 용돈 추가
+      </button>
+
+      <div
+        id="newAllowanceInput"
+        class="allowance-slot"
+        style="display:none;">
+
+        <label>받는 날</label>
+
+        <input
+          id="allowanceDay_new"
+          class="input"
+          type="text"
+          inputmode="numeric"
+          placeholder="예: 9, 23"
+        >
+
+        <label>받은 금액</label>
+
+        <input
+          id="allowanceAmount_new"
+          class="input"
+          type="text"
+          inputmode="numeric"
+          placeholder="예: 70,000"
+          oninput="formatAllowanceAmount(this)"
+        >
+
+        <button
+          class="btn"
+          onclick="saveAllowanceSlot()">
+          저장
+        </button>
+
+      </div>
+    `;
+  }
+
+  slots.innerHTML = html;
+}
+
+
+function formatAllowanceAmount(input){
+
+  const value=input.value.replace(/[^0-9]/g,"");
+
+  input.value=value
+    ? Number(value).toLocaleString("ko-KR")
+    : "";
+}
+
+
+function saveAllowanceSlot(){
+
+  const dayText =
+    document.getElementById("allowanceDay_new").value.trim();
+
+  const amountText =
+    document.getElementById("allowanceAmount_new").value.trim();
+
+  const amount =
+    Number(amountText.replace(/,/g, ""));
+
+  if(!dayText){
+    toast("받는 날을 입력해주세요.");
+    return;
+  }
+
+  if(!amount){
+    toast("받은 금액을 입력해주세요.");
+    return;
+  }
+
+  const activeAllowances =
+    (state.allowances || [])
+      .filter(a => !a.endDate || a.endDate >= today());
+
+  if(activeAllowances.length >= 4){
+    toast("용돈은 최대 4개까지 저장할 수 있어요.");
+    return;
+  }
+
+  const days = dayText
+    .split(",")
+    .map(x => Number(x.trim()));
+
+  if(
+    days.length === 0 ||
+    days.some(x =>
+      !Number.isInteger(x) ||
+      x < 1 ||
+      x > 31
+    )
+  ){
+    toast("받는 날은 1일부터 31일까지 입력해주세요.");
+    return;
+  }
+
+  state.allowances.push({
+    id: Date.now().toString(),
+    days: days,
+    amount: amount,
+    memo: "용돈",
+    effectiveFrom: today(),
+    endDate: null
+  });
+
+  saveState();
+  renderAllowanceSlots();
+  renderLedger();
+
+  toast("용돈이 저장됐어요.");
+}
+
+function deleteAllowance(id){
+
+  const a =
+    (state.allowances || [])
+      .find(x => x.id === id);
+
+  if(!a) return;
+
+
+  // 오늘부터 삭제
+  a.endDate = getPreviousDate(today());
+
+  saveState();
+
+  renderAllowanceSlots();
+  renderLedger();
+
+  toast("오늘부터 정기용돈이 삭제됐어요.");
+}
+
+function showAllowanceInput(){
+
+  const box =
+    document.getElementById("newAllowanceInput");
+
+  if(box){
+    box.style.display = "block";
+  }
+}
+
+
+function editAllowance(id){
+
+  const a = (state.allowances || []).find(x => x.id === id);
+
+  if(!a) return;
+
+  const slot =
+    [...document.querySelectorAll(".allowance-slot")]
+      .find(el => el.querySelector(
+        `button[onclick="editAllowance('${id}')"]`
+      ));
+
+  if(!slot) return;
+
+  const days = Array.isArray(a.days)
+    ? a.days
+    : [Number(a.day)];
+
+  slot.innerHTML = `
+    <label>받는 날</label>
+
+    <input
+      id="editAllowanceDay"
+      class="input"
+      type="text"
+      inputmode="numeric"
+      value="${escapeHtml(days.join(", "))}"
+    >
+
+    <label>받은 금액</label>
+
+    <input
+      id="editAllowanceAmount"
+      class="input"
+      type="text"
+      inputmode="numeric"
+      value="${Number(a.amount || 0).toLocaleString("ko-KR")}"
+      oninput="formatAllowanceAmount(this)"
+    >
+
+    <button
+      class="btn"
+      onclick="saveAllowanceEdit('${id}')">
+      저장
+    </button>
+
+    <button
+      class="small-btn"
+      onclick="renderAllowanceSlots()">
+      취소
+    </button>
+  `;
+}
+
+function saveAllowanceEdit(id){
+
+  const old =
+    (state.allowances || [])
+      .find(a => a.id === id);
+
+  if(!old) return;
+
+  const dayText =
+    document
+      .getElementById("editAllowanceDay")
+      .value
+      .trim();
+
+  const amountText =
+    document
+      .getElementById("editAllowanceAmount")
+      .value
+      .trim();
+
+  const amount =
+    Number(
+      amountText.replace(/,/g,"")
+    );
+
+  const days =
+    dayText
+      .split(",")
+      .map(x => Number(x.trim()))
+      .filter(x => !isNaN(x));
+
+  if(
+    !dayText ||
+    !amount ||
+    days.length === 0 ||
+    days.some(
+      x =>
+        !Number.isInteger(x) ||
+        x < 1 ||
+        x > 31
+    )
+  ){
+    toast("받는 날과 받은 금액을 확인해주세요.");
+    return;
+  }
+
+  const todayDate = today();
+
+  // ★ 기존 정기용돈은 어제까지만 유지
+  old.endDate =
+    getPreviousDate(todayDate);
+
+  // ★ 새로운 설정은 오늘부터 적용
+  state.allowances.push({
+
+    id:
+      Date.now().toString(),
+
+    days: days,
+
+    amount: amount,
+
+    memo: "용돈",
+
+    effectiveFrom:
+      todayDate,
+
+    endDate:
+      null
+  });
+
+  saveState();
+
+  renderAllowanceSlots();
+  renderLedger();
+
+  toast("오늘부터 변경된 용돈이 적용돼요.");
+}
+
+function getPreviousDate(dateString){
+
+  const d =
+    new Date(dateString + "T00:00:00");
+
+  d.setDate(d.getDate() - 1);
+
+  return d.getFullYear() + "-" +
+    String(d.getMonth()+1).padStart(2,"0") + "-" +
+    String(d.getDate()).padStart(2,"0");
+}
+
+function getAllowanceDays(a){
+
+  if(Array.isArray(a.days)){
+    return a.days
+      .map(Number)
+      .filter(d => Number.isInteger(d) && d >= 1 && d <= 31);
+  }
+
+  if(Array.isArray(a.day)){
+    return a.day
+      .map(Number)
+      .filter(d => Number.isInteger(d) && d >= 1 && d <= 31);
+  }
+
+  if(a.day !== undefined){
+    const d = Number(a.day);
+    return Number.isInteger(d) && d >= 1 && d <= 31
+      ? [d]
+      : [];
+  }
+
+  return [];
+}
+
+
+function allowanceAppliesOnDate(a, dateString){
+
+  // 설정하기 전 날짜에는 적용하지 않음
+  if(
+    a.effectiveFrom &&
+    dateString < a.effectiveFrom
+  ){
+    return false;
+  }
+
+  // 수정/삭제하기 전까지만 적용
+  if(
+    a.endDate &&
+    dateString > a.endDate
+  ){
+    return false;
+  }
+
+  const day = Number(dateString.slice(-2));
+
+  return getAllowanceDays(a).includes(day);
+}
+
+function calculateSaving(){
+  const n=Number(document.getElementById("savingAmount").value||0);
+  const c=document.getElementById("savingCycle").value;
+  const times=c==="weekly"?52:c==="biweekly"?26:12;
+  document.getElementById("savingResult").textContent="1년 동안 "+money(n*times);
+}
+function renderSettingsBalances(){
+  document.getElementById("settingsBalances").innerHTML =
+    getCurrencies().map(c=>`
+      <div class="balance-line">
+        <span>${escapeHtml(c)}</span>
+        <span>${money(state.balances[c] || 0)}</span>
+      </div>
+    `).join("");
+}
+function renderLedgerSettings(){
+  document.getElementById("ledgerSettingsBalances").innerHTML=getCurrencies().map(c=>`<div class="balance-line"><span>${c}</span><span>${money(state.balances[c])}</span></div>`).join("");
+}
+function openBalanceModal(){
+  document.getElementById("balanceModalTitle").textContent=state.initialized?"잔액 수정":"처음 잔액 기록";
+  document.getElementById("balanceInputs").innerHTML=getCurrencies().map(c=>`<label>${c}</label><input id="bal_${c}" class="input" type="number" step="100" value="${state.balances[c]||0}">`).join("");
+  document.getElementById("balanceModal").classList.add("show");
+}
+function saveBalances(){
+  getCurrencies().forEach(c=>state.balances[c]=Number(document.getElementById("bal_"+c).value||0));
+  state.initialized=true;saveState();closeModal("balanceModal");renderSettingsBalances();renderLedgerSettings();toast("잔액이 저장됐어요.");
+}
+function firstLaunchCheck(){
+  ensureMonth();
+  if(!state.initialized){openBalanceModal()}
+}
+function toast(t){
+  const el=document.getElementById("toast");el.textContent=t;el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"),1800);
+}
+
+window.addEventListener("load",()=>{
+  document.getElementById("ledgerDate").value=today();
+  document.getElementById("recordCurrency").innerHTML=getCurrencies().map(c=>`<option>${c}</option>`).join("");
+  document.getElementById("recordCategory").innerHTML=CATEGORIES.map(c=>`<option>${c}</option>`).join("");
+  document.getElementById("recordType").value="expense";
+  toggleRecordType();
+  firstLaunchCheck();
+});
+</script>
+</body>
+</html>
