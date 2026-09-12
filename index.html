@@ -350,6 +350,13 @@
     </button>
 
     <button
+      id="firstInstallAppBtn"
+      class="btn blue-btn"
+      onclick="installApp()">
+      📱 앱 설치하기
+    </button>
+
+    <button
       class="btn blue-btn"
       onclick="saveFirstCurrencies()">
       다음
@@ -414,6 +421,13 @@ window.addEventListener("beforeinstallprompt", event => {
 
   if(btn){
     btn.classList.remove("hidden");
+  }
+
+  const firstBtn =
+    document.getElementById("firstInstallAppBtn");
+
+  if(firstBtn){
+    firstBtn.classList.remove("hidden");
   }
 
 });
