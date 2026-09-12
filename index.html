@@ -434,31 +434,29 @@ window.addEventListener("beforeinstallprompt", event => {
 
 async function installApp(){
 
-  if(!deferredInstallPrompt){
+  // Chrome에서 설치 요청이 준비된 경우
+  if(deferredInstallPrompt){
 
-    toast("현재 브라우저에서는 앱 설치 메뉴를 이용해주세요.");
+    deferredInstallPrompt.prompt();
+
+    const result =
+      await deferredInstallPrompt.userChoice;
+
+    if(result.outcome === "accepted"){
+      toast("앱 설치를 시작했어요.");
+    }else{
+      toast("앱 설치가 취소됐어요.");
+    }
+
+    deferredInstallPrompt = null;
 
     return;
   }
 
-  deferredInstallPrompt.prompt();
-
-  const result =
-    await deferredInstallPrompt.userChoice;
-
-  if(result.outcome === "accepted"){
-    toast("앱 설치를 시작했어요.");
-  }
-
-  deferredInstallPrompt = null;
-
-  const btn =
-    document.getElementById("installAppBtn");
-
-  if(btn){
-    btn.classList.add("hidden");
-  }
+  // 설치 요청이 준비되지 않은 경우
+  toast("크롬 메뉴에서 '앱 설치'를 선택해주세요.");
 }
+ 
 function defaultState(){
   return {
     balances:{
