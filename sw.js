@@ -1,9 +1,11 @@
-const CACHE_NAME = "budget-app-v1";
+const CACHE_NAME = "budget-app-v2";
 
 const FILES = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -15,7 +17,6 @@ self.addEventListener("install", event => {
 
   self.skipWaiting();
 });
-
 
 self.addEventListener("activate", event => {
 
@@ -31,7 +32,6 @@ self.addEventListener("activate", event => {
 
   self.clients.claim();
 });
-
 
 self.addEventListener("fetch", event => {
 
