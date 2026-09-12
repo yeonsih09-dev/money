@@ -139,6 +139,12 @@
       </button>
     </div>
     <button class="btn dark" onclick="showSettings()">⚙ 설정</button>
+    <button
+      id="installAppBtn"
+      class="btn blue-btn hidden"
+      onclick="installApp()">
+      📱 앱 설치하기
+    </button>
   </section>
 
   <!-- 예산 -->
@@ -322,7 +328,35 @@
     <button class="btn blue-btn" onclick="saveRecord()">저장</button>
   </div>
 </div>
+<!-- 최초 카드/화폐 입력 모달 -->
+<div id="currencyFirstModal" class="modal-backdrop">
+  <div class="modal">
 
+    <div class="modal-head">
+      <h2>카드/화폐 설정</h2>
+    </div>
+
+    <div class="note" style="margin-top:0;margin-bottom:15px;">
+      사용하는 카드나 화폐를 입력해주세요.
+    </div>
+
+    <div id="firstCurrencyInputs"></div>
+
+    <button
+      class="btn dark"
+      onclick="addFirstCurrencyInput()">
+      + 카드/화폐 추가
+    </button>
+
+    <button
+      class="btn blue-btn"
+      onclick="saveFirstCurrencies()">
+      다음
+    </button>
+
+  </div>
+</div>
+ 
 <!-- 잔액 최초 입력/수정 모달 -->
 <div id="balanceModal" class="modal-backdrop">
   <div class="modal">
@@ -348,9 +382,16 @@ const DEFAULT_CURRENCIES = [
 ];
 
 function getCurrencies(){
-  if(Array.isArray(state.currencies) && state.currencies.length){
+
+  if(
+    Array.isArray(state.currencies) &&
+    state.currencies.length
+  ){
     return state.currencies;
   }
+
+  return [];
+}
 
   // 이전에 저장된 데이터가 있다면 불러오기
   if(Array.isArray(state.getCurrencies) && state.getCurrencies.length){
@@ -371,13 +412,14 @@ let balanceWasOpened = false;
 function defaultState(){
   return {
     balances:{
-    "카드입력":0,
-    "카드입력":0,
-    "카드입력":0,
-    "현금":0,
+      "카드입력":0,
+      "카드입력":0,
+      "카드입력":0,
+      "현금":0,
     },
-    currencies: [...DEFAULT_CURRENCIES],
+    currencies: [],
     initialized:false,
+    currencyInitialized:false,
     allowances:[],
     incomes:[],
     extraAllowances:[],
@@ -389,10 +431,29 @@ function defaultState(){
 }
 function loadState(){
   try{
-    const raw=localStorage.getItem(STORAGE);
-    const s=raw?JSON.parse(raw):defaultState();
-    return Object.assign(defaultState(),s);
-  }catch(e){return defaultState()}
+    const raw = localStorage.getItem(STORAGE);
+    const s = raw ? JSON.parse(raw) : defaultState();
+
+    const result = Object.assign(defaultState(), s);
+
+    // 이전 버전 데이터 호환
+    if(
+      !Array.isArray(result.currencies) ||
+      result.currencies.length === 0
+    ){
+      if(
+        Array.isArray(result.getCurrencies) &&
+        result.getCurrencies.length
+      ){
+        result.currencies = [...result.getCurrencies];
+      }
+    }
+
+    return result;
+
+  }catch(e){
+    return defaultState();
+  }
 }
 function saveState(){localStorage.setItem(STORAGE,JSON.stringify(state))}
 function migrateState(){
@@ -1453,6 +1514,114 @@ function calculateSaving(){
   const times=c==="weekly"?52:c==="biweekly"?26:12;
   document.getElementById("savingResult").textContent="1년 동안 "+money(n*times);
 }
+
+let firstCurrencyCount = 0;
+
+function openFirstCurrencyModal(){
+
+  const box =
+    document.getElementById("firstCurrencyInputs");
+
+  box.innerHTML = "";
+
+  firstCurrencyCount = 0;
+
+  addFirstCurrencyInput();
+
+  document
+    .getElementById("currencyFirstModal")
+    .classList.add("show");
+}
+
+
+function addFirstCurrencyInput(){
+
+  const box =
+    document.getElementById("firstCurrencyInputs");
+
+  if(firstCurrencyCount >= 10){
+    toast("최대 10개까지 입력할 수 있어요.");
+    return;
+  }
+
+  firstCurrencyCount++;
+
+  const index = firstCurrencyCount;
+
+  const row = document.createElement("div");
+
+  row.className = "allowance-slot";
+
+  row.innerHTML = `
+    <label>카드/화폐 ${index}</label>
+
+    <input
+      id="firstCurrency_${index}"
+      class="input"
+      type="text"
+      placeholder="예: 국민카드"
+    >
+  `;
+
+  box.appendChild(row);
+
+  document
+    .getElementById("firstCurrency_" + index)
+    .focus();
+}
+
+
+function saveFirstCurrencies(){
+
+  const currencies = [];
+
+  for(let i = 1; i <= firstCurrencyCount; i++){
+
+    const input =
+      document.getElementById("firstCurrency_" + i);
+
+    if(!input) continue;
+
+    const name = input.value.trim();
+
+    if(name){
+      currencies.push(name);
+    }
+  }
+
+  if(currencies.length === 0){
+    toast("카드/화폐를 하나 이상 입력해주세요.");
+    return;
+  }
+
+  // 중복 제거
+  const uniqueCurrencies =
+    [...new Set(currencies)];
+
+  if(uniqueCurrencies.length !== currencies.length){
+    toast("같은 이름의 카드/화폐가 있어요.");
+    return;
+  }
+
+  state.currencies =
+    uniqueCurrencies;
+
+  // 새 카드의 잔액 기본값
+  state.balances = {};
+
+  uniqueCurrencies.forEach(name => {
+    state.balances[name] = 0;
+  });
+
+  state.currencyInitialized = true;
+
+  saveState();
+
+  closeModal("currencyFirstModal");
+
+  // 카드 입력 후 바로 잔액 입력
+  openBalanceModal();
+}
 function renderSettingsBalances(){
   document.getElementById("settingsBalances").innerHTML =
     getCurrencies().map(c=>`
@@ -1466,17 +1635,80 @@ function renderLedgerSettings(){
   document.getElementById("ledgerSettingsBalances").innerHTML=getCurrencies().map(c=>`<div class="balance-line"><span>${c}</span><span>${money(state.balances[c])}</span></div>`).join("");
 }
 function openBalanceModal(){
-  document.getElementById("balanceModalTitle").textContent=state.initialized?"잔액 수정":"처음 잔액 기록";
-  document.getElementById("balanceInputs").innerHTML=getCurrencies().map(c=>`<label>${c}</label><input id="bal_${c}" class="input" type="number" step="100" value="${state.balances[c]||0}">`).join("");
-  document.getElementById("balanceModal").classList.add("show");
+
+  document.getElementById("balanceModalTitle").textContent =
+    state.initialized
+      ? "잔액 수정"
+      : "처음 잔액 기록";
+
+  document.getElementById("balanceInputs").innerHTML =
+    getCurrencies().map(c => `
+      <label>${escapeHtml(c)}</label>
+
+      <input
+        id="bal_${encodeURIComponent(c)}"
+        class="input"
+        type="number"
+        step="100"
+        value="${state.balances[c] || 0}"
+      >
+    `).join("");
+
+  document
+    .getElementById("balanceModal")
+    .classList.add("show");
 }
 function saveBalances(){
-  getCurrencies().forEach(c=>state.balances[c]=Number(document.getElementById("bal_"+c).value||0));
-  state.initialized=true;saveState();closeModal("balanceModal");renderSettingsBalances();renderLedgerSettings();toast("잔액이 저장됐어요.");
+
+  getCurrencies().forEach(c => {
+
+    const input =
+      document.getElementById(
+        "bal_" + encodeURIComponent(c)
+      );
+
+    if(input){
+      state.balances[c] =
+        Number(input.value || 0);
+    }
+
+  });
+
+  state.initialized = true;
+
+  saveState();
+
+  closeModal("balanceModal");
+
+  renderSettingsBalances();
+  renderLedgerSettings();
+
+  toast("잔액이 저장됐어요.");
 }
 function firstLaunchCheck(){
+
   ensureMonth();
-  if(!state.initialized){openBalanceModal()}
+
+  // 카드/화폐를 아직 설정하지 않았다면
+  // 가장 먼저 카드 입력창을 보여줌
+  if(
+    !state.currencyInitialized ||
+    !Array.isArray(state.currencies) ||
+    state.currencies.length === 0
+  ){
+
+    openFirstCurrencyModal();
+
+    return;
+  }
+
+  // 카드 설정은 되어 있지만
+  // 잔액을 아직 입력하지 않았다면 잔액 입력
+  if(!state.initialized){
+
+    openBalanceModal();
+
+  }
 }
 function toast(t){
   const el=document.getElementById("toast");el.textContent=t;el.classList.add("show");
