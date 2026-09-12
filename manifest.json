@@ -1,7 +1,9 @@
 {
   "name": "가계부 · 예산관리",
   "short_name": "가계부",
+  "description": "예산을 계획하고 사용한 돈을 기록하는 가계부",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
