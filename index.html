@@ -391,16 +391,7 @@ function getCurrencies(){
     return state.currencies;
   }
 
-  return [];
-}
-
-  // 이전에 저장된 데이터가 있다면 불러오기
-  if(Array.isArray(state.getCurrencies) && state.getCurrencies.length){
-    state.currencies = [...state.getCurrencies];
-    return state.currencies;
-  }
-
-  state.currencies = [...DEFAULT_CURRENCIES];
+  state.currencies = [];
   return state.currencies;
 }
 const STORAGE = "my_budget_app_v1";
